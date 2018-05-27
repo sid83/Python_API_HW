@@ -1,0 +1,501 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from citipy import citipy\n",
+    "import matplotlib.pyplot as plt\n",
+    "import random\n",
+    "from config import api_key\n",
+    "import openweathermapy.core as owm"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#seedify random numbers to obtain repeatable results\n",
+    "random.seed(a=20)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "city_list=[];country_list=[]\n",
+    "for i in range(0,1200):\n",
+    "    lat=random.randrange(-90,90)\n",
+    "    long=random.randrange(-180,180)\n",
+    "    city=citipy.nearest_city(lat,long)\n",
+    "    city_list.append(city.city_name)\n",
+    "    country_list.append(city.country_code)\n",
+    "df=pd.DataFrame({\"City\":city_list,\"Country\":country_list}) \n",
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Counting unique combinations of city and country\n",
+    "grped=df.groupby([\"Country\",\"City\"])\n",
+    "ds=grped.size()\n",
+    "len(ds)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_=ds.to_frame().reset_index()\n",
+    "df_unique_cities=df_[[\"Country\",\"City\"]]\n",
+    "# Creating column with city,country in the format required by openweathermapy\n",
+    "df_unique_cities['city,country']=\"\"\n",
+    "for index,row in df_unique_cities.iterrows():\n",
+    "    row['city,country']=f\"{row['City']},{row['Country']}\"\n",
+    "df_unique_cities['Lat']=\"\";df_unique_cities['Long']=\"\";df_unique_cities['Temperature(F)']=\"\";df_unique_cities['Humidity(%)']=\"\"\n",
+    "df_unique_cities['Cloudiness(%)']=\"\";df_unique_cities['Wind Speed(mph)']=\"\"\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "for index,row in df_unique_cities.iterrows():\n",
+    "    data=owm.get_currrent(row['city,country'],**settings)\n",
+    "    row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "    row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "    row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "#     data.get_many(keys)\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "for index,row in df_unique_cities.iterrows():\n",
+    "    data=owm.get_current(row['city,country'],**settings)\n",
+    "    row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "    row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "    row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "#     data.get_many(keys)\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except HTTPError:\n",
+    "    print(row['city,country'])\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except:\n",
+    "    print(row['city,country'])\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except:\n",
+    "    print(row['city,country'])\n",
+    "    continue\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except:\n",
+    "    print(row['city,country'])\n",
+    "    continue\n",
+    "# df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except:\n",
+    "    continue\n",
+    "# df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "for index,row in df_unique_cities.iterrows():\n",
+    "    data=owm.get_current(row['city,country'],**settings)\n",
+    "    row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "    row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "    row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import urllib.error\n",
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except exception urllib.error.HTTPError:\n",
+    "    continue\n",
+    "# df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import urllib\n",
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "try:\n",
+    "    for index,row in df_unique_cities.iterrows():\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "    #     data.get_many(keys)\n",
+    "except urllib.error.HTTPError:\n",
+    "    continue\n",
+    "# df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import urllib\n",
+    "settings = {\"APPID\": api_key, \"units\": \"imperial\"}\n",
+    "# keys = [\"coord.lon\",\"coord.lat\",\"clouds.all\",\"main.temp\", \"main.humidity\", \"wind.speed\"]\n",
+    "for index,row in df_unique_cities.iterrows():\n",
+    "    try:\n",
+    "        data=owm.get_current(row['city,country'],**settings)\n",
+    "        row['Lat']=data(\"coord.lat\");row['Long']=data(\"coord.lat\")\n",
+    "        row['Temperature(F)']=data(\"main.temp\");row['Humidity(%)']=data(\"main.humidity\")\n",
+    "        row['Cloudiness(%)']=data(\"clouds.all\");row['Wind Speed(mph)']=data(\"wind.speed\")\n",
+    "        #     data.get_many(keys)\n",
+    "    except urllib.error.HTTPError as err:\n",
+    "        if err==404:\n",
+    "            print(row['city,country'])\n",
+    "            continue\n",
+    "        else:\n",
+    "            print(err)\n",
+    "            print(row['city,country'])\n",
+    "# df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.dtypes()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.dtype()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities[[\"Lat\",\"Long\",\"Temperature(F)\",\"Humidity(%)\",\"Cloudiness(%)\",\"Wind Speed(mph)\"]]=df_unique_cities[[\"Lat\",\"Long\",\"Temperature(F)\",\"Humidity(%)\",\"Cloudiness(%)\",\n",
+    "                                                                                                                    \"Wind Speed(mph)\"]].apply(pd.to_numeric,errors=\"coerce\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities[[\"Lat\",\"Long\",\"Temperature(F)\",\"Humidity(%)\",\"Cloudiness(%)\",\"Wind Speed(mph)\"]]=df_unique_cities[[\"Lat\",\"Long\",\"Temperature(F)\",\"Humidity(%)\",\"Cloudiness(%)\",\n",
+    "                                                                                                                    \"Wind Speed(mph)\"]].apply(pd.to_numeric,errors=\"coerce\")\n",
+    "df_unique_cities.count()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "help(df_unique_cities.dropna)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities=df_unique_cities.dropna(axis=0,how=\"any\")\n",
+    "df_unique_cities.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.count()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.dtypes()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "help(df_unique_cities.plot())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.plot(kind=\"scatter\",x=\"Lat\",Y=\"Temperature(F)\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_unique_cities.plot(kind=\"scatter\",x=\"Lat\",y=\"Temperature(F)\")\n",
+    "\n",
+    "# df.plot(kind='scatter', x='col1', y='col2', s=df.col3)"
+   ]
+  }
+ ],
+ "metadata": {},
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
